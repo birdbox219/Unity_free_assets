@@ -1,0 +1,49 @@
+name: Unity Publisher Sale Check
+
+on:
+  schedule:
+    # Run every hour at minute 0
+    - cron: '0 * * * *'
+
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+# Required for auto-committing cache.json updates
+permissions:
+  contents: write
+
+jobs:
+  check-promotion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # ---- Checkout repository ----
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---- Set up Python ----
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # ---- Install dependencies ----
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ---- Run the promotion checker ----
+      - name: Check for new promotions
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python main.py
+
+      # ---- Commit cache updates ----
+      - name: Commit cache changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add cache.json
+          git diff --cached --quiet || git commit -m "chore: update promotion cache [skip ci]"
+          git push
