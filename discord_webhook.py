@@ -158,6 +158,7 @@ def _build_webhook_payload(promo: PromotionData) -> dict:
     embed = _build_embed(promo)
 
     payload: dict = {
+        "content": "@everyone",
         "username": "Unity Asset Store",
         "avatar_url": (
             "https://images.ctfassets.net/t8hl2pirfi15/"
